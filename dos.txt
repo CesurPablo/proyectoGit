@@ -1,1 +1,1 @@
-el archivo está vacío, así que quedará como única línea
+Primera línea
