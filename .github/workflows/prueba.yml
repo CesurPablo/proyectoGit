@@ -1,0 +1,19 @@
+name: prueba
+
+on: [push]
+
+jobs:
+  comparar-tokens:
+    runs-on: self-hosted
+    steps:
+      - name: Comparar DEV_TOKEN (secret) con LOCAL_DEV_TOKEN (variable local)
+        shell: cmd
+        env:
+          DEV_TOKEN: ${{ secrets.DEV_TOKEN }}
+        run: |
+          if "%DEV_TOKEN%"=="%LOCAL_DEV_TOKEN%" (
+            echo Los tokens COINCIDEN
+          ) else (
+            echo Los tokens NO COINCIDEN
+            exit /b 1
+          )
