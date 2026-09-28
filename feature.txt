@@ -1,1 +1,2 @@
 ﻿Cambio de prueba para el PR - 2026-09-28T12:59:42.1336722+02:00
+Cambio para probar el fallo - 2026-09-28T13:10:31.1676413+02:00
