@@ -1,0 +1,55 @@
+name: cd
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
+
+      - name: Incrementar version en el README
+        shell: bash
+        run: |
+          CURRENT=$(grep -oP 'AppVersion-\K[0-9]+' README.md | tail -1)
+          if [ -z "$CURRENT" ]; then CURRENT=0; fi
+          NEXT=$((CURRENT + 1))
+          TS=$(date '+%Y-%m-%d %H:%M:%S')
+          sed -i "s/AppVersion-$CURRENT.*/AppVersion-$NEXT - $TS/" README.md
+
+      - name: Commit y push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git diff --cached --quiet || git commit -m "cd: bump de version"
+          git push origin HEAD:${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
+
+  validate-prod:
+    needs: update-readme
+    runs-on: self-hosted
+    steps:
+      - name: Comparar PROD_TOKEN (secret) con LOCAL_PROD_TOKEN (variable local)
+        shell: cmd
+        env:
+          PROD_TOKEN: ${{ secrets.PROD_TOKEN }}
+        run: |
+          if "%PROD_TOKEN%"=="%LOCAL_PROD_TOKEN%" (
+            echo Los tokens COINCIDEN
+          ) else (
+            echo Los tokens NO COINCIDEN
+            exit /b 1
+          )
